@@ -26,6 +26,14 @@ ledger + sabah brifingi entegrasyonu Faz 1'de gelir. ledger tablosu Faz 0 asgari
 ## 2026-07-14 — Framework: Hono + Node 22 LTS
 1GB RAM'de hafif, TS-native. Alternatif Fastify — Hono daha hafif seçildi.
 
+## 2026-07-14 — Sır hijyeni (kural)
+Bir olay sonrası: sır üretiminde `echo` + `.env` diff/read değerleri transcript'e düşürdü. Kurallar:
+- Sır ASLA stdout'a basılmaz. Değerler bir script içinde üretilip `.env`'e doğrudan yazılır; script yalnız "rotated OK" gibi değersiz onay basar. `.env`'i okuma/diff'leme (grep ile uzunluk kontrolü bile riskli).
+- **IDE/harness açık `.env`'i her değişiklikte otomatik diff'ler** → tool ile yapılan her `.env` yazımı değerleri gösterir; bu kaçınılmaz. Sonuç: **bu lokal oturumdaki tüm sırlar "dev-only/yanmış" kabul edilir.**
+- **Üretim sırları domain gününde VM üzerinde üretilir, hiçbir zaman bu sohbete/transcript'e girmez.** Lokal sırları prod'a taşıma.
+- age private (`infra/secrets/age-key.txt`) parola kasasına; repoya/env'e girmez. GCP SA json yalnız `infra/secrets/`.
+- Rotasyon lokal'de döngüye sokulmaz (aynı IDE-diff hook'u tekrar sızdırır) — yanmış say, prod'da taze üret.
+
 ## 2026-07-14 — Konteynerde pnpm 9 (packageManager pnpm@9.15.4)
 pnpm 10+ postinstall build script'lerini varsayılan bloklar (`ERR_PNPM_IGNORED_BUILDS`, esbuild). `pnpm.onlyBuiltDependencies` alanı 11'de beklenen etkiyi vermedi. Dockerfile `corepack enable` `packageManager` alanını okur → **pnpm 9.15.4** build script'lerini varsayılan çalıştırır, gate yok. Not: Windows host'ta `pnpm install` zaten Defender+esbuild EPERM ile bloklu (bkz memory windows-esbuild-defender); build/test/typecheck Docker'da.
 
