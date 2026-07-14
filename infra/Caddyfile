@@ -1,0 +1,23 @@
+# DOMAIN env'den gelir. Uretimde otomatik TLS; localhost'ta Caddy yerel HTTPS/HTTP.
+{$DOMAIN:localhost} {
+	encode gzip
+
+	# API -> api konteyneri
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+
+	# PWA statik + SPA fallback
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000;"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+}

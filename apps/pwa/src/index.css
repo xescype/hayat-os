@@ -1,0 +1,56 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* "Gece Matbaasi" token'lari (docs/gorsel-kimlik.md). Degisiklik once o dosyada, sonra burada. */
+:root {
+  --bg-top: #0a0a0c;
+  --bg-bottom: #141418;
+  --surface: #161619;
+  --hairline: rgba(255, 255, 255, 0.08);
+
+  --text: #ededef;
+  --text-dim: #9a9aa2;
+  --text-faint: #6a6a72;
+
+  --accent: #c4374a; /* acik kizil-bordo: baslik/vurgu metni */
+  --accent-deep: #7a2230; /* koyu bordo: cizgi/etiket */
+  --accent-fill: #5a1a26; /* derin bordo: genis dolgu */
+
+  --radius: 5px;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur: 200ms;
+
+  /* TEK grotesk aile. Oneri Geist; sistem grotesk'lerine dus (font dosyasi Faz 0'da paketlenmedi). */
+  --font-sans: "Geist", "Space Grotesk", ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--text);
+  background: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-bottom) 100%);
+  background-attachment: fixed;
+  /* Tabular rakamlar zorunlu: sayilar hizali akar. */
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Kritik sayilar ekranin yildizi: display sinifi. */
+.num-star {
+  font-size: clamp(40px, 12vw, 64px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}

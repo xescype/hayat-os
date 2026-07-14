@@ -1,0 +1,12 @@
+**/node_modules
+**/dist
+**/build
+**/.vite
+.git
+.env
+.env.*
+!.env.example
+**/*.log
+docs/anayasa
+secrets/
+data/

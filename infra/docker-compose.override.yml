@@ -1,0 +1,18 @@
+# LOKAL Faz 0 (Windows Docker Desktop). `docker compose up` bunu otomatik uygular.
+# Imajlari lokalde build eder (guclu makine); VM'de bu dosya KULLANILMAZ.
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: hayatos-api:local
+
+  caddy:
+    build:
+      context: ..
+      dockerfile: apps/pwa/Dockerfile
+    image: hayatos-caddy:local
+    # http://localhost => Caddy yalniz http:80 (localhost secure context; WebAuthn calisir).
+    # https/TLS domain gununde gercek DOMAIN ile devreye girer.
+    environment:
+      DOMAIN: http://localhost

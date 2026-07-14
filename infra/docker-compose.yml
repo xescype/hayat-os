@@ -1,0 +1,51 @@
+# Baz compose = URETIM. api/caddy imajlari GHCR'dan cekilir (VM'de build YOK).
+# Lokal Faz 0 icin docker-compose.override.yml build: ekler (otomatik uygulanir).
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: hayatos
+      POSTGRES_PASSWORD: hayatos
+      POSTGRES_DB: hayatos
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hayatos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  api:
+    image: ghcr.io/OWNER/hayatos-api:latest
+    env_file:
+      - ../.env
+    environment:
+      DATABASE_URL: postgres://hayatos:hayatos@db:5432/hayatos
+    volumes:
+      # GCP service account + digerleri (Vertex health, GCS yedek). Yoksa gracefully atlar.
+      - ./secrets:/run/secrets:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 512m
+    restart: unless-stopped
+
+  caddy:
+    image: ghcr.io/OWNER/hayatos-caddy:latest
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:

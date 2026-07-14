@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+coverage/
+.turbo/
+.vite/
+pnpm-debug.log*
+# local secrets & data
+secrets/*
+!secrets/.gitkeep
+infra/secrets/*
+!infra/secrets/.gitkeep
+data/
+uploads/
+*.age
+*.key
+!*.example.key
