@@ -118,6 +118,18 @@ export default function App() {
                 Yedek al (kuyruga)
               </Button>
             </div>
+            <Divider />
+            <Button
+              variant="ghost"
+              disabled={busy}
+              onClick={() =>
+                guard(async () => {
+                  await api.post("/auth/logout");
+                }, "Cikis yapildi.").then(() => setView("auth"))
+              }
+            >
+              Cikis yap
+            </Button>
           </Card>
         )}
 
