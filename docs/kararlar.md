@@ -35,12 +35,16 @@ Defter aramasinda `I/İ/ı/i` sorunu icin karar: **hepsini ASCII `i`'ye katla** 
 ## 2026-07-16 — GCP "Agent Platform" yeniden adlandirma (not)
 Vertex AI / `aiplatform` ve `roles/aiplatform.user` konsolda "Agent Platform" / "Agent Platform User" olarak gorunuyor. **ID'ler ayni** (`aiplatform.googleapis.com`, `roles/aiplatform.user`) — kod/IAM degismez, yalniz UI etiketi degisti.
 
-## 2026-07-15 — Vertex ses spike (DEVAM EDIYOR / API etkinlestirme bekliyor)
-Amac: Turkce test sesi -> Gemini Flash -> transkript + intent (workout_set/meal/calendar_event ayrimi, sayi dogrulugu, gecikme, maliyet). Yontem: GCP TTS(tr-TR) ile ses uret -> Vertex generateContent (REST + google-auth token, @google-cloud/vertexai SDK'siz).
-- **AUTH ✅** SA (`gcp-sa.json`) cloud-platform token aldi (Vertex kimlik teli calisiyor).
-- **BLOK:** `texttospeech.googleapis.com` proje `virtual-sum-502411-h7`'de etkin degil (403). Cozum: `gcloud services enable texttospeech.googleapis.com aiplatform.googleapis.com`. SA'ya muhtemelen `roles/aiplatform.user` gerekir.
-- **API surprizi:** Vertex REST audio girisi `inlineData:{mimeType:'audio/mp3', data:<base64>}` + `generationConfig.responseMimeType:'application/json'` ile deneniyor; sonuc API etkinlesince guncellenecek.
-- Spike script: konteynerde `/app/apps/api/spike-audio.mjs` (throwaway; google-auth-library + global fetch).
+## 2026-07-16 — Vertex ses spike SONUC (BASARILI, 1D icin altin bilgi)
+Turkce test sesi -> Gemini Flash -> tek cagride transkript+intent. Yontem: GCP TTS(tr-TR) ile ses uret ->
+Vertex `generateContent` (REST + google-auth token, `@google-cloud/vertexai` SDK'siz; audio `inlineData:
+{mimeType:'audio/mp3', data:<base64>}` + `generationConfig.responseMimeType:'application/json'`).
+- **Model:** `gemini-2.5-flash` ✅. `gemini-2.0-flash`, `-2.0-flash-001`, `-1.5-flash-002`, `gemini-flash-latest` -> **404** (us-central1'de yok/erisim yok). **Karar: routing.ts'te flash modeli `gemini-2.5-flash`** (pricing.ts guncelle).
+- **Dogruluk:** sayilar birebir (62.5, [8,8,7], 15:00), Turkce karakter saglam (Oglen/disim). Intent ayrimi dogru: workout_set + meal + calendar_event.
+- **GECIKME kritik:** `thinkingConfig.thinkingBudget=0` -> ~5.6s; varsayilan (thinking acik) -> ~15.6s (thoughts ~1995 token). **Karar: ses hattinda (1D) thinkingBudget=0/dusuk** (gecikme > marjinal transkript kalitesi). Tradeoff: thinking kapaliyken transkript hafif bozuldu ("cektim"->"aciktim") + spurious `pain` intent'i.
+- **Prompt dersi:** ornekteki bos `payload:{}` -> model bos payload+conf 0 dondurdu. **parse.md (Bolum 9.2) DOLU few-shot ister** (gercek payload'li 6-10 Turkce ornek). Kural-motoru on-gecisi (Bolum 8.8) + confidence esigi spurious intent'leri keser.
+- **Maliyet:** ses ~225 token / ~6sn konusma; toplam istek ~346 in + ~170-274 out. Cok ucuz. est_cost withMetering ile 1D'de ai_calls'a yazilir (metering yolu Faz 0'da kanitli). Not: bu spike sirasinda Docker daemon cokmustu, ai_calls insert'i host'tan yapilmadi.
+- **API surprizi:** REST `.../publishers/google/models/<MODEL>:generateContent`; model ID versiyonu onemli. `@google-cloud/vertexai` SDK'siz REST yeterli (sadece google-auth-library). Host node (esbuild'siz) + `npm i google-auth-library` ile Docker'siz kosuldu.
 
 ## 2026-07-14 — Sır hijyeni (kural)
 Bir olay sonrası: sır üretiminde `echo` + `.env` diff/read değerleri transcript'e düşürdü. Kurallar:
