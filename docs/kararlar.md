@@ -26,6 +26,22 @@ ledger + sabah brifingi entegrasyonu Faz 1'de gelir. ledger tablosu Faz 0 asgari
 ## 2026-07-14 — Framework: Hono + Node 22 LTS
 1GB RAM'de hafif, TS-native. Alternatif Fastify — Hono daha hafif seçildi.
 
+## 2026-07-16 — Urun adi "Oda", kod adi "hayat-os"
+Kullaniciya gorunen urun adi **Oda**. Kod tarafi degismez: repo/paket (`@hayatos/*`)/DB/imaj (`hayatos-api`,`hayatos-caddy`) adlari AYNI kalir. "Oda" yalniz kullanici-yuzu metinlerde: PWA manifest `name`/`short_name`, giris ekrani basligi, bildirim basliklari, README ilk satiri. Esleme `docs/glossary.md`'ye eklendi. (1A plani: manifest/baslik guncellemesi kucuk madde.)
+
+## 2026-07-16 — Turkce-I arama katlamasi: hepsi ASCII 'i'
+Defter aramasinda `I/İ/ı/i` sorunu icin karar: **hepsini ASCII `i`'ye katla** (yazimda normalize kolon `search_norm` + sorguda ayni katlama). Gerekce: kisisel defterde yanlis-NEGATIF (kaydi bulamamak) > yanlis-pozitif; genis eslesme tercih edilir. `İstanbul/ISTANBUL/istanbul` hepsi `istanbul`'a katlanir, `agri/AGRI` -> `agri`. Turkce karakterler de ASCII'ye indirgenir (ç->c, ş->s, ğ->g, ü->u, ö->o, ı/İ->i). Ham `raw_input` DEGISMEZ; yalniz arama kolonu normalize.
+
+## 2026-07-16 — GCP "Agent Platform" yeniden adlandirma (not)
+Vertex AI / `aiplatform` ve `roles/aiplatform.user` konsolda "Agent Platform" / "Agent Platform User" olarak gorunuyor. **ID'ler ayni** (`aiplatform.googleapis.com`, `roles/aiplatform.user`) — kod/IAM degismez, yalniz UI etiketi degisti.
+
+## 2026-07-15 — Vertex ses spike (DEVAM EDIYOR / API etkinlestirme bekliyor)
+Amac: Turkce test sesi -> Gemini Flash -> transkript + intent (workout_set/meal/calendar_event ayrimi, sayi dogrulugu, gecikme, maliyet). Yontem: GCP TTS(tr-TR) ile ses uret -> Vertex generateContent (REST + google-auth token, @google-cloud/vertexai SDK'siz).
+- **AUTH ✅** SA (`gcp-sa.json`) cloud-platform token aldi (Vertex kimlik teli calisiyor).
+- **BLOK:** `texttospeech.googleapis.com` proje `virtual-sum-502411-h7`'de etkin degil (403). Cozum: `gcloud services enable texttospeech.googleapis.com aiplatform.googleapis.com`. SA'ya muhtemelen `roles/aiplatform.user` gerekir.
+- **API surprizi:** Vertex REST audio girisi `inlineData:{mimeType:'audio/mp3', data:<base64>}` + `generationConfig.responseMimeType:'application/json'` ile deneniyor; sonuc API etkinlesince guncellenecek.
+- Spike script: konteynerde `/app/apps/api/spike-audio.mjs` (throwaway; google-auth-library + global fetch).
+
 ## 2026-07-14 — Sır hijyeni (kural)
 Bir olay sonrası: sır üretiminde `echo` + `.env` diff/read değerleri transcript'e düşürdü. Kurallar:
 - Sır ASLA stdout'a basılmaz. Değerler bir script içinde üretilip `.env`'e doğrudan yazılır; script yalnız "rotated OK" gibi değersiz onay basar. `.env`'i okuma/diff'leme (grep ile uzunluk kontrolü bile riskli).

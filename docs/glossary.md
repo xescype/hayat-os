@@ -2,6 +2,8 @@
 
 UI metni Türkçe, kod İngilizce. Bu eşleşme kaybolmasın.
 
+**Ürün adı:** kullanıcıya görünen ad **Oda**; kod adı **hayat-os** (repo/paket `@hayatos/*`/DB/imaj `hayatos-*` DEĞİŞMEZ). "Oda" yalnız kullanıcı-yüzü metinlerde (manifest name/short_name, giriş başlığı, bildirim başlıkları, README ilk satırı).
+
 | Türkçe (UI) | Kod terimi |
 |---|---|
 | Defter | ledger |

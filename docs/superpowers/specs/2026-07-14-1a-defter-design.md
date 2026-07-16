@@ -36,6 +36,7 @@ ledger_entries
   audio_ref     text                 -- ses ref (ses saklama ayari; 1A'da null)
   sensitivity   text not null default 'normal'  -- normal|sensitive  (CHECK)
   superseded_by uuid references ledger_entries(id)  -- ESKI satir YENI'yi isaret eder
+  search_norm   text                 -- normalizeSearch(raw_input+' '+response_text); ASCII-fold, insert'te set
   created_at    timestamptz not null default now()  -- DB insert ani (degismez)
   CHECK (superseded_by IS NULL OR superseded_by <> id)
 ```
@@ -50,7 +51,7 @@ ledger_ts_idx        (ts desc)
 ledger_active_idx    (ts desc) WHERE superseded_by IS NULL     -- aktif gorunum (kismi)
 ledger_channel_idx   (channel, ts desc)
 ledger_superseded_idx(superseded_by)
-ledger_trgm_idx      GIN (raw_input gin_trgm_ops, response_text gin_trgm_ops)
+ledger_trgm_idx      GIN (search_norm gin_trgm_ops)   -- ASCII-fold arama (Turkce-I)
 ```
 
 **Append-only koruma (DB trigger — savunma derinliği):** `BEFORE UPDATE` trigger yalnız
@@ -73,6 +74,7 @@ Modül düzeni (Bölüm 5): `schema.ts` · `service.ts` · `routes.ts` · `*.tes
 writeLedger(input): Promise<{ id }>
   - Zod dogrulama (channel/actor/sensitivity enum, metin alanlari).
   - append-only INSERT. sensitivity cagiricidan (kaynak belirler, Bolum 9.3); varsayilan 'normal'.
+  - search_norm = normalizeSearch(raw_input+' '+response_text) (ASCII-fold; shared, testli).
   - opsiyonel ts override (cevrimdisi senk); yoksa now().
 
 supersede(oldId, newInput): Promise<{ id }>
@@ -84,13 +86,14 @@ supersede(oldId, newInput): Promise<{ id }>
   - zincir A->B->C: aktif = superseded_by IS NULL olan (C).
 
 listActive({ cursor?, limit }): superseded_by IS NULL, ts desc, cursor sayfalama.
-search({ q?, from?, to?, channel? }): pg_trgm (raw_input+response_text) + tarih + kanal.
+search({ q?, from?, to?, channel? }): pg_trgm(search_norm, normalizeSearch(q)) + tarih + kanal.
 getChain(id): supersede zincirini takip (test + ileride UI).
 exportRange({ from?, to?, format }): Bolum 4.
 ```
 
 **1A yazıcıları:**
-- Metin-not route → `writeLedger({ channel:'text', actor:'user', raw_input })`.
+- Metin-not route (`POST /api/ledger/note`) → `writeLedger({ channel:'text', actor:'user', raw_input })`.
+  **`raw_input.trim()` boş → 400 (yazma YOK).**
 - Yedek job (`jobs/backup.ts`) — **başarı VE başarısızlık** → `writeLedger({ channel:'system',
   actor:'system', response_text })` (notifications_log'a EK).
 - Login + kayıt (`auth/webauthn` finish) → `writeLedger({ channel:'system', actor:'system',
@@ -104,6 +107,9 @@ Tüm ledger route'ları oturum korumalı (`readSession`).
 
 **Navigasyon:** App'e iki-görünüm anahtarı — `Panel` (Faz 0 kabuğu) ↔ `Defter`, üstte hairline sekme.
 (Şu An kartı 1E'de Panel'i devralır.)
+
+**Ürün adı "Oda" (küçük madde):** manifest `name`/`short_name`=**Oda**, giriş/başlık "Oda", bildirim
+başlıkları "Oda" (Faz 0'da "Hayat OS" idi). Kod adı `hayat-os`/`@hayatos/*`/imaj DEĞİŞMEZ. (bkz glossary.md)
 
 **Bileşenler** (hepsi `docs/gorsel-kimlik.md` token'ları; sabit hex YOK):
 - **Not girişi (üst):** `Input` + gönder → `POST /api/ledger/note` → satır `stagger-in` ile listeye.
@@ -148,7 +154,8 @@ büyürse stream (dev not; Faz 1 düşük hacim → bellekte topla).
 ## 5. Test Stratejisi
 
 **Saf birim (DB yok):** düz-metin biçimleyici (Istanbul tz, başlık, "Sen/Sistem" varyantları) ·
-`writeLedger` Zod doğrulama (geçersiz enum red, sensitivity default, ts override) · cursor encode/decode.
+`writeLedger` Zod doğrulama (geçersiz enum red, sensitivity default, ts override) · cursor encode/decode ·
+`normalizeSearch` (İstanbul/ağrı → istanbul/agri) · **not-endpoint: trim sonrası boş raw_input → 400, yazma yok.**
 
 **Entegrasyon (gerçek Postgres):** harness `apps/api/test/db.ts` — `TEST_DATABASE_URL` (`hayatos_test`),
 vitest `globalSetup` DB oluştur+migrate, test başına `ledger_entries` truncate. Faz 0'ın DB'siz testleri
@@ -163,10 +170,12 @@ ayrı dosyalarda, bozulmaz.
   **Türkçe vaka testleri:** `istanbul`→`İstanbul`, `antrenman`→`ANTRENMANIMDAKİ`, `ağrı`→`omuz ağrısı`.
 - **Export:** JSON superseded İÇERİR + ISO UTC · düz metin aktif-only + Istanbul + başlık.
 
-**Türkçe-I riski (karar spec'e):** pg_trgm/`lower()` varsayılan locale'de `İ/I/ı/i` katlaması yanlış
-olabilir. Vaka testleri kırılırsa çözüm: yazım+sorgu anında **arama-normalizasyonu** (Türkçe-farkında
-casefold: `İ→i`, `I→ı` ya da her ikisini ASCII `i`'ye indirge) uygulanır; tercih edilen çözüm ve
-gerekçesi `docs/kararlar.md`'ye işlenir. İlk deneme: `lower()` + testte gözlem; gerekirse normalize kolonu.
+**Türkçe-I çözümü (KİLİTLİ — hepsi ASCII `i`):** `lower()` varsayılan locale'de `İ/I/ı/i` katlamasını
+yanlış yapar. Karar: **ASCII katlama** — `ledger_entries`'e `search_norm` kolonu (`raw_input`+
+`response_text` birleşiği, ç→c ş→s ğ→g ü→u ö→o ı/İ→i, sonra lowercase); pg_trgm GIN index bu kolonda.
+Sorgu da aynı `normalizeSearch()` fonksiyonundan geçer (`packages/shared`, testli, iki taraf aynı).
+Gerekçe: kişisel defterde yanlış-negatif > yanlış-pozitif; geniş eşleşme. `İstanbul/ISTANBUL`→`istanbul`,
+`ağrı/AĞRI`→`agri`. Ham `raw_input` DEĞİŞMEZ. (bkz `docs/kararlar.md`)
 
 **CI test job (`.github/workflows`):** Postgres 16 service'li ayrı job — migrate + `pnpm -r test`
 (`TEST_DATABASE_URL` service'e bağlı). Mevcut build-images job'ına ek.
