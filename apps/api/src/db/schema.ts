@@ -88,3 +88,28 @@ export const jobs = pgTable(
   },
   (t) => [index("jobs_due_idx").on(t.doneAt, t.runAfter)],
 );
+
+/** Defter: append-only olay gunlugu (Bolum 1A). Trigger ile korunur, satirlar hic silinmez/degismez. */
+export const ledgerEntries = pgTable(
+  "ledger_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ts: timestamp("ts", { withTimezone: true }).defaultNow().notNull(),
+    channel: text("channel").notNull(),
+    actor: text("actor").notNull(),
+    rawInput: text("raw_input"),
+    interpretation: jsonb("interpretation"),
+    moduleWrites: jsonb("module_writes").$type<{ table: string; id: string }[]>(),
+    responseText: text("response_text"),
+    audioRef: text("audio_ref"),
+    sensitivity: text("sensitivity").notNull().default("normal"),
+    searchNorm: text("search_norm"),
+    supersededBy: uuid("superseded_by"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("ledger_ts_idx").on(t.ts.desc()),
+    index("ledger_channel_idx").on(t.channel, t.ts.desc()),
+    index("ledger_superseded_idx").on(t.supersededBy),
+  ],
+);
