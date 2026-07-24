@@ -1,5 +1,6 @@
 // Zod semalari — API sozlesmesinin TEK kaynagi. Dis dunyadan gelen her sey once buradan gecer.
 import { z } from "zod";
+import { LEDGER_CHANNELS, LEDGER_ACTORS, SENSITIVITY } from "./constants.js";
 
 /** Web Push abonelik govdesi (PushSubscription.toJSON cikti sekli). */
 export const pushSubscriptionSchema = z.object({
@@ -36,3 +37,23 @@ export const apiErrorSchema = z.object({
   message: z.string(),
 });
 export type ApiError = z.infer<typeof apiErrorSchema>;
+
+/** Defter yazim semalari — her girdi once buradan gecer (ledger_entries tablosu icin). */
+export const ledgerWriteSchema = z.object({
+  channel: z.enum(LEDGER_CHANNELS),
+  actor: z.enum(LEDGER_ACTORS),
+  raw_input: z.string().optional().nullable(),
+  interpretation: z.unknown().optional().nullable(),
+  module_writes: z.array(z.object({ table: z.string(), id: z.string() })).optional().nullable(),
+  response_text: z.string().optional().nullable(),
+  audio_ref: z.string().optional().nullable(),
+  sensitivity: z.enum(SENSITIVITY).default("normal"),
+  ts: z.coerce.date().optional(),
+});
+export type LedgerWriteInput = z.infer<typeof ledgerWriteSchema>;
+
+/** PWA metin-notu: trim sonrasi bos reddedilir (bkz route 400). */
+export const noteInputSchema = z.object({
+  raw_input: z.string().transform((s) => s.trim()).pipe(z.string().min(1)),
+});
+export type NoteInput = z.infer<typeof noteInputSchema>;
