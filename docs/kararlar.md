@@ -46,6 +46,14 @@ Vertex `generateContent` (REST + google-auth token, `@google-cloud/vertexai` SDK
 - **Maliyet:** ses ~225 token / ~6sn konusma; toplam istek ~346 in + ~170-274 out. Cok ucuz. est_cost withMetering ile 1D'de ai_calls'a yazilir (metering yolu Faz 0'da kanitli). Not: bu spike sirasinda Docker daemon cokmustu, ai_calls insert'i host'tan yapilmadi.
 - **API surprizi:** REST `.../publishers/google/models/<MODEL>:generateContent`; model ID versiyonu onemli. `@google-cloud/vertexai` SDK'siz REST yeterli (sadece google-auth-library). Host node (esbuild'siz) + `npm i google-auth-library` ile Docker'siz kosuldu.
 
+## 2026-07-24 — Vertex ses spike TEKRAR kosumu (dogrulandi + bir duzeltme)
+Ayni script, ayni cumle, `gemini-2.5-flash`, us-central1. Auth/TTS/Vertex zinciri **yine calisti** (API'ler + `roles/aiplatform.user` hazir).
+- **Gecikme farki buyudu:** `thinkingBudget=0` -> **3.3s**; varsayilan thinking -> **24.5s** (3947 thought token). Ilk kosumda 5.6s vs 15.6s idi; oran daha da keskin.
+- **DUZELTME (onemli):** `thinkingBudget=0` yalniz "hafif transkript bozulmasi" degil — **workout_set intent'ini TAMAMEN kacirdi**. Cikti: `pain{acıktım}` + meal + calendar_event; 62.5 ve [8,8,7] hicbir intent'e baglanmadi (transkriptte "887" duz metin kaldi). Thinking acikken intent dogru: `workout_set{Bench Press, 62.5, [8,8,7]}`.
+- **Yeni karar (onceki "1D'de thinkingBudget=0" karari GUNCELLENDI):** 0 degil, **orta bir butce denenecek** (~256-512) ya da kural-motoru on-gecisi (Bolum 8.8) sayi/set orunturlerini thinking'siz yakalayacak. Ses hattinda hedef: spor setleri kaybolmadan <8s. Kesin deger 1D'de olculecek.
+- **Few-shot dersi tekrarlandi:** bos `payload:{}` ornegi yuzunden thinking acikken tum `confidence` degerleri 0 dondu. parse.md DOLU few-shot sart.
+- Maliyet: 346 in token (225'i ses) + 223-283 out; thinking acikken toplam 4576 token. Yine cok ucuz ama thinking token'i 8x fark yaratiyor.
+
 ## 2026-07-14 — Sır hijyeni (kural)
 Bir olay sonrası: sır üretiminde `echo` + `.env` diff/read değerleri transcript'e düşürdü. Kurallar:
 - Sır ASLA stdout'a basılmaz. Değerler bir script içinde üretilip `.env`'e doğrudan yazılır; script yalnız "rotated OK" gibi değersiz onay basar. `.env`'i okuma/diff'leme (grep ile uzunluk kontrolü bile riskli).
