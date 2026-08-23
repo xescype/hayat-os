@@ -1,7 +1,8 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, gte, ilike, isNull, lte, sql as dsql } from "drizzle-orm";
 import { ledgerWriteSchema, normalizeSearch, type LedgerWriteInput } from "@hayatos/shared";
 import { db } from "../../db/client.js";
 import { ledgerEntries } from "../../db/schema.js";
+import { decodeCursor, encodeCursor } from "./cursor.js";
 
 export type LedgerRow = typeof ledgerEntries.$inferSelect;
 
@@ -55,4 +56,54 @@ export async function getChain(startId: string): Promise<LedgerRow[]> {
     cur = row.supersededBy;
   }
   return out;
+}
+
+export interface ListOpts {
+  cursor?: string;
+  limit?: number;
+}
+
+export interface SearchOpts extends ListOpts {
+  q?: string;
+  from?: Date;
+  to?: Date;
+  channel?: string;
+}
+
+export interface Page {
+  rows: LedgerRow[];
+  nextCursor: string | null;
+}
+
+const clampLimit = (n?: number) => Math.min(Math.max(n ?? 50, 1), 200);
+
+/** Aktif gorunum (superseded haric), ts desc sayfali. */
+export async function listActive(opts: ListOpts = {}): Promise<Page> {
+  return search({ ...opts });
+}
+
+/** Aktif gorunumde filtreli arama: q search_norm uzerinden ilike (pg_trgm GIN),
+ *  from/to ts araligi, channel esitligi; cursor (ts,id) satir karsilastirmasiyla sayfalar. */
+export async function search(opts: SearchOpts = {}): Promise<Page> {
+  const limit = clampLimit(opts.limit);
+  const conds = [isNull(ledgerEntries.supersededBy)];
+  const qNorm = opts.q ? normalizeSearch(opts.q) : "";
+  if (qNorm) conds.push(ilike(ledgerEntries.searchNorm, `%${qNorm}%`));
+  if (opts.from) conds.push(gte(ledgerEntries.ts, opts.from));
+  if (opts.to) conds.push(lte(ledgerEntries.ts, opts.to));
+  if (opts.channel) conds.push(eq(ledgerEntries.channel, opts.channel));
+  const cur = opts.cursor ? decodeCursor(opts.cursor) : null;
+  if (cur) conds.push(dsql`(${ledgerEntries.ts}, ${ledgerEntries.id}) < (${cur.ts}, ${cur.id})`);
+
+  const rows = await db
+    .select()
+    .from(ledgerEntries)
+    .where(and(...conds))
+    .orderBy(desc(ledgerEntries.ts), desc(ledgerEntries.id))
+    .limit(limit + 1);
+
+  const hasMore = rows.length > limit;
+  const page = hasMore ? rows.slice(0, limit) : rows;
+  const last = page[page.length - 1];
+  return { rows: page, nextCursor: hasMore && last ? encodeCursor(last.ts, last.id) : null };
 }
