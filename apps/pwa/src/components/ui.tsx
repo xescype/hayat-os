@@ -46,3 +46,43 @@ export function Input({ className = "", ...rest }: InputHTMLAttributes<HTMLInput
     />
   );
 }
+
+export function LedgerRow({
+  ts,
+  channel,
+  sen,
+  sistem,
+  sensitive,
+}: {
+  ts: string;
+  channel: string;
+  sen: string | null;
+  sistem: string | null;
+  sensitive: boolean;
+}) {
+  const stamp = new Intl.DateTimeFormat("tr-TR", {
+    timeZone: "Europe/Istanbul",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(ts));
+  return (
+    <div
+      className={`animate-stagger-in border-t border-hairline py-3 flex gap-3 ${
+        sensitive ? "border-l-2 border-l-accent-deep pl-2" : ""
+      }`}
+    >
+      <div className="shrink-0 w-24">
+        <div className="text-xs text-text-faint tabular-nums">{stamp}</div>
+        <div className="mt-1">
+          <Badge>{channel}</Badge>
+        </div>
+      </div>
+      <div className="min-w-0 text-sm">
+        {sen && <div className="text-text">Sen: {sen}</div>}
+        {sistem && <div className="text-text-dim">Sistem: {sistem}</div>}
+      </div>
+    </div>
+  );
+}

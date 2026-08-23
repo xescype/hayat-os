@@ -3,11 +3,14 @@ import { Card, Button, Input, Badge, Divider } from "./components/ui.js";
 import { register, login, me } from "./auth/webauthn.js";
 import { subscribePush } from "./push/register.js";
 import { api } from "./lib/api.js";
+import Defter from "./views/Defter.js";
 
 type View = "loading" | "auth" | "in";
+type Tab = "panel" | "defter";
 
 export default function App() {
   const [view, setView] = useState<View>("loading");
+  const [tab, setTab] = useState<Tab>("panel");
   const [setupToken, setSetupToken] = useState("");
   const [msg, setMsg] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -79,7 +82,30 @@ export default function App() {
         )}
 
         {view === "in" && (
-          <Card className="space-y-4">
+          <div className="w-full max-w-md space-y-4">
+            <div className="flex gap-4 border-b border-hairline pb-2">
+              <button
+                onClick={() => setTab("panel")}
+                className={`text-sm tracking-tight transition-colors ${
+                  tab === "panel" ? "text-accent" : "text-text-dim hover:text-text"
+                }`}
+              >
+                Panel
+              </button>
+              <button
+                onClick={() => setTab("defter")}
+                className={`text-sm tracking-tight transition-colors ${
+                  tab === "defter" ? "text-accent" : "text-text-dim hover:text-text"
+                }`}
+              >
+                Defter
+              </button>
+            </div>
+
+            {tab === "defter" ? (
+              <Defter />
+            ) : (
+              <Card className="space-y-4">
             <div>
               <div className="text-xs text-text-faint tracking-tight">Bugun kayit</div>
               <div className="num-star text-text">0</div>
@@ -130,7 +156,9 @@ export default function App() {
             >
               Cikis yap
             </Button>
-          </Card>
+              </Card>
+            )}
+          </div>
         )}
 
         {msg && (
