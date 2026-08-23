@@ -70,3 +70,6 @@ drizzle-kit iki ekstra esbuild sürümü çekiyordu + host install'ı zorlaştı
 
 ## 2026-07-14 — Font: Geist (öneri) vs Space Grotesk
 Geist üstün tabular rakam + UI-odaklı; sayı-ağırlıklı ekran için. İlk gerçek ekranda ikisi yan yana denenip kesinleşecek. `--font-sans` ile tek noktadan değişir.
+
+## 2026-08-23 — LedgerWriteInput: z.input (çağrı tarafı GİRİŞ tipi)
+`z.infer` çıktı tipiydi; `sensitivity.default("normal")` yüzünden çağrı yerinde zorunlu görünüyordu — service.itest + trigger.itest'te 14 typecheck hatası birikmişti (vitest tip kontrolü yapmadığı için fark edilmedi). `z.input`'a geçildi: default'lu alanlar çağrıda opsiyonel kalır, default'u parse uygular (mevcut "sensitivity default normal" testinin beklediği davranış). Alternatif: 14 çağrıya elle `sensitivity:"normal"` yazmak — gürültü, reddedildi. **Ders: her task kapanışında `pnpm -r typecheck` koşulmalı; vitest yeşilliği tip güvenliği kanıtı DEĞİL.**
