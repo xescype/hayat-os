@@ -50,7 +50,8 @@ export const ledgerWriteSchema = z.object({
   sensitivity: z.enum(SENSITIVITY).default("normal"),
   ts: z.coerce.date().optional(),
 });
-export type LedgerWriteInput = z.infer<typeof ledgerWriteSchema>;
+/** Cagri tarafi GIRIS tipi: default'lu alanlar (sensitivity, ...) opsiyonel kalir; parse uygular. */
+export type LedgerWriteInput = z.input<typeof ledgerWriteSchema>;
 
 /** PWA metin-notu: trim sonrasi bos reddedilir (bkz route 400). */
 export const noteInputSchema = z.object({
