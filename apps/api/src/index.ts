@@ -7,6 +7,7 @@ import { runMigrations } from "./db/migrate.js";
 import { ensureBackupScheduled, startPoller, enqueue } from "./jobs/poller.js";
 import { auth } from "./routes/auth.js";
 import { push } from "./routes/push.js";
+import { ledger } from "./modules/ledger/routes.js";
 import { readSession } from "./auth/session.js";
 import { vertex } from "./ai/providers/vertex.js";
 import { runMetering } from "./ai/withMetering.js";
@@ -50,6 +51,7 @@ app.post("/api/jobs/backup", async (c) => {
 
 app.route("/api/auth", auth);
 app.route("/api/push", push);
+app.route("/api/ledger", ledger);
 
 async function boot(): Promise<void> {
   await runMigrations();
