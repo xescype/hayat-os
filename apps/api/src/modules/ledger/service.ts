@@ -3,6 +3,7 @@ import { ledgerWriteSchema, normalizeSearch, type LedgerWriteInput } from "@haya
 import { db } from "../../db/client.js";
 import { ledgerEntries } from "../../db/schema.js";
 import { decodeCursor, encodeCursor } from "./cursor.js";
+import { toPlainText } from "./format.js";
 
 export type LedgerRow = typeof ledgerEntries.$inferSelect;
 
@@ -106,4 +107,33 @@ export async function search(opts: SearchOpts = {}): Promise<Page> {
   const page = hasMore ? rows.slice(0, limit) : rows;
   const last = page[page.length - 1];
   return { rows: page, nextCursor: hasMore && last ? encodeCursor(last.ts, last.id) : null };
+}
+
+export interface ExportOpts {
+  from?: Date;
+  to?: Date;
+  format: "json" | "text";
+}
+
+/** Disa aktarma: JSON TAM kayit (aktif + superseded, ts artan); duz metin yalniz aktif. */
+export async function exportRange(
+  opts: ExportOpts,
+): Promise<{ body: string; contentType: string; filename: string }> {
+  const conds = [];
+  if (opts.from) conds.push(gte(ledgerEntries.ts, opts.from));
+  if (opts.to) conds.push(lte(ledgerEntries.ts, opts.to));
+  const where = conds.length ? and(...conds) : undefined;
+  const tag = `${opts.from?.toISOString().slice(0, 10) ?? "all"}_${opts.to?.toISOString().slice(0, 10) ?? "all"}`;
+
+  if (opts.format === "json") {
+    const rows = await db.select().from(ledgerEntries).where(where).orderBy(ledgerEntries.ts);
+    return { body: JSON.stringify(rows, null, 2), contentType: "application/json", filename: `defter-${tag}.json` };
+  }
+
+  const rows = await db
+    .select()
+    .from(ledgerEntries)
+    .where(and(isNull(ledgerEntries.supersededBy), ...conds))
+    .orderBy(ledgerEntries.ts);
+  return { body: toPlainText(rows, opts.from, opts.to), contentType: "text/plain", filename: `defter-${tag}.txt` };
 }

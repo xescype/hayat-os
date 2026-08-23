@@ -3,7 +3,7 @@ import { truncateLedger } from "../../../test/db.js";
 import { db } from "../../db/client.js";
 import { ledgerEntries } from "../../db/schema.js";
 import { and, eq, isNull } from "drizzle-orm";
-import { writeLedger, supersede, getChain, listActive, search } from "./service.js";
+import { writeLedger, supersede, getChain, listActive, search, exportRange } from "./service.js";
 
 describe("writeLedger", () => {
   beforeEach(truncateLedger);
@@ -87,5 +87,27 @@ describe("listActive + search", () => {
     await writeLedger({ channel: "text", actor: "user", raw_input: "not" });
     await writeLedger({ channel: "system", actor: "system", response_text: "olay" });
     expect((await search({ channel: "system" })).rows).toHaveLength(1);
+  });
+});
+
+describe("exportRange", () => {
+  beforeEach(truncateLedger);
+
+  it("JSON superseded satirlari ICERIR", async () => {
+    const { id: a } = await writeLedger({ channel: "text", actor: "user", raw_input: "eski" });
+    await supersede(a, { channel: "text", actor: "user", raw_input: "yeni" });
+    const { body, contentType } = await exportRange({ format: "json" });
+    expect(contentType).toBe("application/json");
+    const arr = JSON.parse(body);
+    expect(arr).toHaveLength(2); // eski (superseded) + yeni
+  });
+
+  it("duz metin yalniz aktif", async () => {
+    const { id: a } = await writeLedger({ channel: "text", actor: "user", raw_input: "eski" });
+    await supersede(a, { channel: "text", actor: "user", raw_input: "yeni" });
+    const { body, contentType } = await exportRange({ format: "text" });
+    expect(contentType).toBe("text/plain");
+    expect(body).toContain("yeni");
+    expect(body).not.toContain("eski");
   });
 });
