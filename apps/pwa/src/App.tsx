@@ -37,7 +37,7 @@ export default function App() {
       <div className="w-full max-w-sm space-y-4">
         <header className="space-y-1">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold tracking-tight text-text">Hayat OS</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-text">Oda</h1>
             <Badge>Faz 0</Badge>
           </div>
           <p className="text-sm text-text-dim">Kisisel hayat isletim sistemi — iskelet.</p>

@@ -1,6 +1,6 @@
-# Hayat OS
+# Oda
 
-Tek kullanicilik kisisel hayat isletim sistemi. Anayasa: `docs/anayasa/`. Kararlar: `docs/kararlar.md`.
+(kod adi: hayat-os) Tek kullanicilik kisisel hayat isletim sistemi. Anayasa: `docs/anayasa/`. Kararlar: `docs/kararlar.md`.
 
 **Faz 0 = iskelet:** kimlik (WebAuthn), bildirim (Web Push), gece yedegi (GCS), sayacli AI altyapisi,
 Postgres zamanlayici, PWA kabugu (Gece Matbaasi tasarim sistemi). Akilli ozellik yok (Faz 1+).

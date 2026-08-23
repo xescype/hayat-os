@@ -38,7 +38,7 @@ push.post("/test", async (c) => {
     return c.json({ error: "unauthorized", message: "Once giris yapmalisin." }, 401);
   }
   const outcome = await pushToAll("test", {
-    title: "Hayat OS",
+    title: "Oda",
     body: "Test bildirimi calisiyor.",
     url: "/",
   });
