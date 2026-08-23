@@ -24,7 +24,7 @@ describe("ledger routes", () => {
     });
     expect(post.status).toBe(200);
     const list = await ledger.request("/");
-    const json = await list.json();
+    const json: any = await list.json();
     expect(json.rows.map((r: any) => r.rawInput)).toContain("ilk not");
   });
 
@@ -54,7 +54,7 @@ describe("ledger routes", () => {
       body: JSON.stringify({ raw_input: "alakasiz kayit" }),
     });
     const res = await ledger.request(`/?q=${encodeURIComponent("istanbul")}`);
-    const json = await res.json();
+    const json: any = await res.json();
     expect(json.rows).toHaveLength(1);
     expect(json.rows[0].rawInput).toBe("İstanbul notu");
   });
