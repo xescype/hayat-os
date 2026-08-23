@@ -11,6 +11,7 @@ import { db } from "../db/client.js";
 import { notificationsLog } from "../db/schema.js";
 import { env } from "../env.js";
 import { pushToAll } from "../push/vapid.js";
+import { writeLedger } from "../modules/ledger/service.js";
 
 const run = promisify(execFile);
 
@@ -23,9 +24,16 @@ async function record(ok: boolean, detail: string, meta?: unknown): Promise<void
     error: ok ? null : detail,
     meta: meta ?? null,
   });
+  // Omurga: yedek sonucu ledger'a da duser (Bolum 8.7). Best-effort; sessiz yutma yok.
+  await writeLedger({
+    channel: "system",
+    actor: "system",
+    response_text: ok ? `Yedek alindi: ${detail}` : `Yedek hatasi: ${detail}`,
+    module_writes: meta ? [{ table: "gcs", id: String((meta as any).objectName ?? "?") }] : null,
+  }).catch((e) => console.error("[ledger] yedek yazici basarisiz:", e));
   // Sessiz curuyen yedek, olmayan yedekten tehlikelidir => basarisizlikta dokun.
   if (!ok) {
-    await pushToAll("backup", { title: "Hayat OS — Yedek hatasi", body: detail, url: "/" }).catch(
+    await pushToAll("backup", { title: "Oda — Yedek hatasi", body: detail, url: "/" }).catch(
       () => {},
     );
   }

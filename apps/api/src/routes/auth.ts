@@ -12,6 +12,7 @@ import {
   registrationOpen,
 } from "../auth/webauthn.js";
 import { issueSession, readSession, clearSession } from "../auth/session.js";
+import { writeLedger } from "../modules/ledger/service.js";
 
 const FLOW = "hayatos_flow";
 const isLocalhost = env.DOMAIN === "localhost";
@@ -60,6 +61,9 @@ auth.post("/register/finish", async (c) => {
   try {
     const { userId } = await finishRegistration(flowId, parsed.data, "Esat");
     await issueSession(c, userId);
+    await writeLedger({ channel: "system", actor: "system", response_text: "Kayit tamamlandi" }).catch(
+      (e) => console.error("[ledger] kayit yazici basarisiz:", e),
+    );
     return c.json({ ok: true });
   } catch (err) {
     return c.json(
@@ -83,6 +87,9 @@ auth.post("/login/finish", async (c) => {
   try {
     const { userId } = await finishAuthentication(flowId, parsed.data);
     await issueSession(c, userId);
+    await writeLedger({ channel: "system", actor: "system", response_text: "Giris yapildi" }).catch(
+      (e) => console.error("[ledger] giris yazici basarisiz:", e),
+    );
     return c.json({ ok: true });
   } catch (err) {
     return c.json(

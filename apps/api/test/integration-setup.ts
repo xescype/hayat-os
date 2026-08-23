@@ -14,3 +14,7 @@ process.env.SETUP_TOKEN = "0123456789abcdef-test-token";
 process.env.VAPID_PUBLIC = vapid.publicKey;
 process.env.VAPID_PRIVATE = vapid.privateKey;
 process.env.VAPID_SUBJECT = "mailto:test@localhost";
+// Yedek testleri hermetik: konteyner .env'inden gelen GERCEK GCS ayarlarini sil ki
+// hicbir test gercek bucket'a yukleme yapmasin; runBackup "yapilandirma eksik" dalini alsin.
+delete process.env.GCS_BACKUP_BUCKET;
+delete process.env.BACKUP_AGE_KEY;
