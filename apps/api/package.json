@@ -13,22 +13,22 @@
     "db:generate": "drizzle-kit generate"
   },
   "dependencies": {
-    "@google-cloud/storage": "^7.14.0",
+    "@google-cloud/storage": "^8.4.0",
     "@hayatos/shared": "workspace:*",
-    "@hono/node-server": "^1.13.7",
-    "@simplewebauthn/server": "^13.1.0",
-    "drizzle-orm": "^0.38.3",
-    "google-auth-library": "^9.15.0",
-    "hono": "^4.6.14",
+    "@hono/node-server": "^2.1.5",
+    "@simplewebauthn/server": "^14.0.3",
+    "drizzle-orm": "^0.45.4",
+    "google-auth-library": "^11.3.0",
+    "hono": "^4.13.13",
     "postgres": "^3.4.5",
-    "tsx": "^4.19.2",
+    "tsx": "^4.23.15",
     "web-push": "^3.6.7",
-    "zod": "^3.24.1"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@types/node": "^22.10.2",
+    "@types/node": "^26.6.5",
     "@types/web-push": "^3.6.4",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
   }
 }
