@@ -15,11 +15,11 @@
   "dependencies": {
     "@google-cloud/storage": "^7.14.0",
     "@hayatos/shared": "workspace:*",
-    "@hono/node-server": "^1.13.7",
+    "@hono/node-server": "^1.19.15",
     "@simplewebauthn/server": "^13.1.0",
-    "drizzle-orm": "^0.38.3",
+    "drizzle-orm": "^0.45.2",
     "google-auth-library": "^9.15.0",
-    "hono": "^4.6.14",
+    "hono": "^4.13.7",
     "postgres": "^3.4.5",
     "tsx": "^4.19.2",
     "web-push": "^3.6.7",
@@ -29,6 +29,6 @@
     "@types/node": "^22.10.2",
     "@types/web-push": "^3.6.4",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^3.2.6"
   }
 }
