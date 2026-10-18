@@ -26,7 +26,7 @@ jobs:
     env:
       TEST_DATABASE_URL: postgres://hayatos:hayatos@localhost:5432/hayatos_test
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v4
         with:
           version: 9.15.4
