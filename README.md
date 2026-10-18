@@ -1,3 +1,5 @@
+<p align="center"><img src="assets/banner.svg" alt="hayat-os: pencerenin önünden geçen güneş ve her gün kendini çizen bir çizgi; Nulla dies sine linea" width="100%"></p>
+
 # Oda
 
 (kod adi: hayat-os) Tek kullanicilik kisisel hayat isletim sistemi. Anayasa: `docs/anayasa/`. Kararlar: `docs/kararlar.md`.
