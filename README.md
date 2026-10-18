@@ -96,3 +96,12 @@ pnpm -r test         # tum testler
 pnpm -r typecheck    # tip kontrolu
 pnpm -r build        # (typecheck; runtime tsx ile source'tan kosar)
 ```
+
+Lisans: Apache-2.0 (bkz. [LICENSE](LICENSE)). Guvenlik: [SECURITY.md](SECURITY.md). Katki: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+**in short (english).** oda (codename hayat-os) is a single-user personal life os.
+a typescript monorepo (pnpm): hono + node 22 api, postgres 16 + drizzle, a react + vite pwa,
+webauthn passkeys, web push, encrypted nightly backups (libsodium, age → gcs) and a metered ai layer on vertex ai.
+phase 0 is the skeleton; smart features come later. licensed under apache-2.0.
