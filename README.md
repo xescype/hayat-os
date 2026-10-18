@@ -7,10 +7,37 @@
 **Faz 0 = iskelet:** kimlik (WebAuthn), bildirim (Web Push), gece yedegi (GCS), sayacli AI altyapisi,
 Postgres zamanlayici, PWA kabugu (Gece Matbaasi tasarim sistemi). Akilli ozellik yok (Faz 1+).
 
+## Mimari
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"background": "#f1ece2", "primaryColor": "#f1ece2", "primaryTextColor": "#15191e", "primaryBorderColor": "#3e7cb1", "lineColor": "#3e7cb1", "secondaryColor": "#f7f3eb", "tertiaryColor": "#f7f3eb", "clusterBkg": "#f7f3eb", "clusterBorder": "#d2cec7", "edgeLabelBackground": "#f1ece2"}}}%%
+flowchart LR
+  subgraph cihaz["cihaz"]
+    pwa["pwa<br/>react · vite · service worker"]
+  end
+
+  subgraph sunucu["sunucu · docker compose"]
+    caddy["caddy<br/>tls · ters vekil"]
+    api["api<br/>hono · node 22"]
+    db[("postgres 16<br/>drizzle · zamanlayıcı")]
+  end
+
+  pwa -- "passkey (webauthn)" --> caddy
+  caddy --> api
+  api --> db
+  api -- "sayaçlı çağrı" --> ai["vertex ai"]
+  api -. "web push (vapid)" .-> pwa
+  api -. "gece: pg_dump → age" .-> gcs[("gcs<br/>şifreli yedek")]
+  ci["github actions"] -. "imaj" .-> ghcr["ghcr"]
+  ghcr -. "pull" .-> sunucu
+```
+
+Belgelerin haritasi: [`docs/README.md`](docs/README.md).
+
 ## Yigin
 - Monorepo (pnpm), TypeScript uctan uca. Backend: **Hono** + Node 22. DB: **Postgres 16 + Drizzle**.
 - PWA: **React + Vite + Tailwind** (koyu tema, `docs/gorsel-kimlik.md`).
-- Sifreleme: libsodium `crypto_secretbox`. Yedek: `pg_dump` + **age** -> GCS.
+- Sifreleme: AES-256-GCM (Node yerlesik; neden libsodium degil: `docs/kararlar.md`). Yedek: `pg_dump` + **age** -> GCS.
 - AI: **Vertex AI** (saglayici soyutlamasi arkasinda). Sayacsiz cagri tip duzeyinde imkansiz.
 
 ## Kararlar (ozet)
@@ -105,5 +132,5 @@ Lisans: Apache-2.0 (bkz. [LICENSE](LICENSE)). Guvenlik: [SECURITY.md](SECURITY.m
 
 **in short (english).** oda (codename hayat-os) is a single-user personal life os.
 a typescript monorepo (pnpm): hono + node 22 api, postgres 16 + drizzle, a react + vite pwa,
-webauthn passkeys, web push, encrypted nightly backups (libsodium, age → gcs) and a metered ai layer on vertex ai.
+webauthn passkeys, web push, aes-256-gcm encryption, age-encrypted nightly backups to gcs and a metered ai layer on vertex ai.
 phase 0 is the skeleton; smart features come later. licensed under apache-2.0.
