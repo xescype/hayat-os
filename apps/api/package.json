@@ -15,7 +15,7 @@
   "dependencies": {
     "@google-cloud/storage": "^7.14.0",
     "@hayatos/shared": "workspace:*",
-    "@hono/node-server": "^1.13.7",
+    "@hono/node-server": "^1.19.15",
     "@simplewebauthn/server": "^13.1.0",
     "drizzle-orm": "^0.38.3",
     "google-auth-library": "^9.15.0",
